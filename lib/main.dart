@@ -1,184 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:test_sqlite/libros.dart';
-import 'package:test_sqlite/database_helper.dart';
+import 'database_helper.dart';
+import 'libros.dart';
+import 'formulario_libro.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MiApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class MiApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CRUD Libros',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(),
+      debugShowCheckedModeBanner: false,
+      title: 'Biblioteca',
+      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      home: PantallaPrincipal(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
+class PantallaPrincipal extends StatefulWidget {
   @override
-   State<MyHomePage> createState() => _MyHomePageState();
+  _PantallaPrincipalState createState() => _PantallaPrincipalState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
-  final TextEditingController _EditTituloLibro=TextEditingController();
-  List<Libro> _items = [];
+class _PantallaPrincipalState extends State<PantallaPrincipal> {
+  final DatabaseHelper dbHelper = DatabaseHelper();
+  List<Libro> libros = [];
 
   @override
   void initState() {
     super.initState();
-    _cargarListaLibros();
+    cargarLibros();
   }
 
-  Future<void> _cargarListaLibros() async {
-    final items = await _dbHelper.getItems();
+  void cargarLibros() async {
+    List<Libro> lista = await dbHelper.obtenerLibros();
     setState(() {
-      _items = items;
+      libros = lista;
     });
   }
 
-  void _agregarNuevoLibro(String tituloLibro) async {
-    final nuevoLibro = Libro(tituloLibro: tituloLibro);
-    await _dbHelper.insertLibro(nuevoLibro);
-    print("NUEVO LIBRO AGREGADO CON EXITO");
-    _cargarListaLibros();
+  void mostrarFormularioAgregar() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FormularioLibro()),
+    ).then((_) => cargarLibros()); // Refresca la lista al volver
   }
 
-  void _mostrarVentanaAgregar(){
-    showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          title: const Text("Agregar Titulo"),
-          content: TextField(
-            controller: _EditTituloLibro,
-            decoration: const InputDecoration(hintText: "Ingrese el titulo"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: (){
-                if(_EditTituloLibro.text!.isNotEmpty){
-                  _agregarNuevoLibro(_EditTituloLibro.text.toString());
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text("Agregar"),
-            ),
-          ],
-        );
-      } 
-    );
-  }
-
-  void _eliminarLibro(int id) async {
-    await _dbHelper.eliminar('libros', where: 'id = ?', whereArgs: [id]);
-    _cargarListaLibros();
-  }
-
-  void _mostrarMensajeModificar(int id){
-    showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          title: Text("Confirmar eliminacion"),
-          content: Text("Estas seguro de que quieres eliinar este libro?"),
-          actions: [
-            TextButton(
-              onPressed: (){
-                Navigator.of(context).pop();
-              },
-              child: Text("Cancelar"),
-            ),
-          ],
-        );
-      }
-    );
-  }
-
-  void _actualizarLibro(int id, String nuevoTitulo) async {
-    await _dbHelper.actualizar(
-      'libros',
-      {'tituloLibro': nuevoTitulo},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    _cargarListaLibros();
-  }
-
-  void _ventanaEditar(int id, String tituloActual) {
-    TextEditingController _tituloController = TextEditingController(text: tituloActual);
-
-    showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          title: Text("Modificar Titulo del Libro"),
-          content: TextField(
-            controller: _tituloController,
-            decoration: InputDecoration(
-              hintText: "Escribe el nuevo titulo"
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: (){
-                Navigator.of(context).pop();
-              },
-              child: Text("Cancelar"),
-            ),
-            TextButton(
-              onPressed: (){
-                if (_tituloController.text!.isNotEmpty){
-                  _actualizarLibro(id, _tituloController.text.toString());
-                }
-                Navigator.of(context).pop();
-              },
-              child: Text("Guardar"),
-            ),
-          ],
-        );
-      }
-    );
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Gestión de Libros'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      ),
-      body: ListView.separated(
-        itemCount: _items.length,
-        separatorBuilder: (context, index) => Divider(),
-        itemBuilder: (context, index) {
-          final libro = _items[index];
-          return ListTile(
-            title: Text(libro.tituloLibro),
-            subtitle: Text('ID: ${libro.id}'),
-            trailing: IconButton(
-              icon: Icon(Icons.delete, color: Colors.grey),
-              onPressed: () {
-                _mostrarMensajeModificar(int.parse(libro.id.toString()));
+      appBar: AppBar(title: Text('Mi Biblioteca 📚')),
+      body: libros.isEmpty
+          ? Center(child: Text('No hay libros aún. Agrega uno! 📖'))
+          : ListView.builder(
+              itemCount: libros.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: EdgeInsets.all(8),
+                  elevation: 5,
+                  child: ListTile(
+                    title: Text(libros[index].tituloLibro,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('ID: ${libros[index].id}'),
+                  ),
+                );
               },
             ),
-            onTap: (){
-              _ventanaEditar(int.parse(libro.id.toString()), libro.tituloLibro);
-            },
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _mostrarVentanaAgregar(),
+        onPressed: mostrarFormularioAgregar,
         child: Icon(Icons.add),
       ),
     );

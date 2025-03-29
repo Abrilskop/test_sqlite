@@ -1,11 +1,10 @@
-class Libro{
-  int? id;
-  String tituloLibro;
+class Libro {
+  final int? id;
+  final String tituloLibro;
 
   Libro({this.id, required this.tituloLibro});
 
-  Map<String, dynamic> toMap(){
-    return {'id':id, 'tituloLibro':tituloLibro,
-    };
+  Map<String, dynamic> toMap() {
+    return {'id': id, 'titulo': tituloLibro};
   }
 }
