@@ -19,11 +19,13 @@ class _FormularioLibroState extends State<FormularioLibro> {
         anioController.text.isNotEmpty) {
       
       final nuevoLibro = Libro(
-        tituloLibro: tituloController.text, 
+        tituloLibro: tituloController.text,
+        autor: autorController.text,
+        anio: int.parse(anioController.text),
       );
 
       await dbHelper.insertLibro(nuevoLibro);
-      Navigator.pop(context); // Cierra la pantalla después de guardar
+      Navigator.pop(context, true); // Indicar que se guardó correctamente
     }
   }
 

@@ -22,32 +22,41 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'biblioteca.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // ⚠️ Cambia a versión 2 para actualizar la estructura
       onCreate: (db, version) {
         db.execute('''
           CREATE TABLE libros(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT
+            titulo TEXT,
+            autor TEXT,
+            anio INTEGER
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) {
+        if (oldVersion < 2) {
+          db.execute("ALTER TABLE libros ADD COLUMN autor TEXT;");
+          db.execute("ALTER TABLE libros ADD COLUMN anio INTEGER;");
+        }
       },
     );
   }
 
   Future<void> insertLibro(Libro libro) async {
     final db = await database;
-    await db.insert('libros', libro.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('libros', libro.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Libro>> obtenerLibros() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('libros');
-    return List.generate(maps.length, (i) {
-      return Libro(
-        id: maps[i]['id'],
-        tituloLibro: maps[i]['titulo'],
-      );
-    });
+  final db = await database;
+  final List<Map<String, dynamic>> maps = await db.query('libros');
+  return List.generate(maps.length, (i) {
+    return Libro(
+      id: maps[i]['id'],
+      tituloLibro: maps[i]['titulo'] ?? 'Título desconocido',  // Evita null en String
+      autor: maps[i]['autor'] ?? 'Autor desconocido',          // Evita null en String
+      anio: maps[i]['anio'] ?? 0,                              // Evita null en int
+    );
+  });
   }
 }

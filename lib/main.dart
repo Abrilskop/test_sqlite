@@ -45,7 +45,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => FormularioLibro()),
-    ).then((_) => cargarLibros()); // Refresca la lista al volver
+    ).then((resultado) {
+      if (resultado == true) {
+        cargarLibros(); // Recargar la lista si se guardó un libro
+      }
+    });
   }
 
   @override
@@ -63,7 +67,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                   child: ListTile(
                     title: Text(libros[index].tituloLibro,
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('ID: ${libros[index].id}'),
+                    subtitle: Text('Autor: ${libros[index].autor} | Año: ${libros[index].anio}'),
                   ),
                 );
               },
