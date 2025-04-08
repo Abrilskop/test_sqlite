@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.test_sqlite"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"  // aambio de ndk
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
